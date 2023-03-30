@@ -6,17 +6,20 @@ import { loginRules } from "./utils/rule";
 import { useNav } from "@/layout/hooks/useNav";
 import type { FormInstance } from "element-plus";
 import { useLayout } from "@/layout/hooks/useLayout";
-import { useUserStoreHook } from "@/store/modules/user";
+// import { useUserStoreHook } from "@/store/modules/user";
 import { bg, avatar, illustration } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { ref, reactive, toRaw, onMounted, onBeforeUnmount } from "vue";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
-import { initRouter } from "@/router/utils";
+import {addPathMatch, initRouter} from "@/router/utils";
 
 import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
 import Lock from "@iconify-icons/ri/lock-fill";
 import User from "@iconify-icons/ri/user-3-fill";
+import {usePermissionStoreHook} from "@/store/modules/permission";
+import {useUserStoreHook} from "@/store/modules/user";
+import {useMultiTagsStoreHook} from "@/store/modules/multiTags";
 
 defineOptions({
   name: "Login"
@@ -33,8 +36,8 @@ dataThemeChange();
 const { title } = useNav();
 
 const ruleForm = reactive({
-  username: "admin",
-  password: "admin123"
+  username: "",
+  password: ""
 });
 
 const onLogin = async (formEl: FormInstance | undefined) => {
@@ -43,14 +46,19 @@ const onLogin = async (formEl: FormInstance | undefined) => {
   await formEl.validate((valid, fields) => {
     if (valid) {
       useUserStoreHook()
-        .loginByUsername({ username: ruleForm.username, password: "admin123" })
+        .loginByUsername({ username: ruleForm.username, password: ruleForm.password })
         .then(res => {
           if (res.success) {
+            console.log(res)
             // 获取后端路由
-            initRouter().then(() => {
-              router.push("/");
-              message("登录成功", { type: "success" });
-            });
+            // 全部采取静态路由模式
+            usePermissionStoreHook().handleWholeMenus([]);
+            addPathMatch();
+            router.push("/");
+            message("登录成功", { type: "success" });
+          }else {
+            loading.value = false;
+            message("登录失败", { type: "error" });
           }
         });
     } else {

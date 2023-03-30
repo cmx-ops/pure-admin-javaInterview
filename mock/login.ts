@@ -15,7 +15,7 @@ export default [
             roles: ["admin"],
             accessToken: "eyJhbGciOiJIUzUxMiJ9.admin",
             refreshToken: "eyJhbGciOiJIUzUxMiJ9.adminRefresh",
-            expires: "2023/10/30 00:00:00"
+            expires: "2023/03/29 15:40:00"
           }
         };
       } else {
