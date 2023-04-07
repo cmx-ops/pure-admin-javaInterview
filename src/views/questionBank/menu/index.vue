@@ -7,9 +7,10 @@
     <div>
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="id" label="Id" width="180"/>
-        <el-table-column prop="menuId" label="菜单Id" width="180"/>
-        <el-table-column prop="title" label="所属分类" width="180"/>
-        <el-table-column prop="questionName" label="题目内容"/>
+        <el-table-column prop="name" label="名称" width="180"/>
+        <el-table-column prop="title" label="标题" width="180"/>
+        <el-table-column prop="icon" label="图标" width="180"/>
+        <el-table-column prop="questionListName" label="题目列表名称"/>
         <el-table-column label="操作">
           <template #default="scope">
             <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
