@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="addButton">
-      <el-button type="primary" @click="dialogVisible = true">新建题目</el-button>
+      <el-button type="primary" @click="dialogVisible4Add = true">新建菜单</el-button>
     </div>
 
     <div>
@@ -47,14 +47,11 @@
     <!-- 新建题目菜单表单 -->
     <div>
       <el-dialog
-        title="新建题目"
-        v-model="dialogVisible"
+        title="新建菜单"
+        v-model="dialogVisible4Add"
         width="30%"
         :before-close="handleClose">
-        <el-form :model="formData" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-          <el-form-item label="名称" prop="name">
-            <el-input v-model="formData.name"></el-input>
-          </el-form-item>
+        <el-form :model="formData" :rules="rules" ref="formData" label-width="100px" class="demo-ruleForm">
           <el-form-item label="标题" prop="title">
             <el-input v-model="formData.title"></el-input>
           </el-form-item>
@@ -65,18 +62,48 @@
             <el-input v-model="formData.questionListName"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="submitForm('ruleForm')">立即创建</el-button>
+            <el-button type="primary" @click="submitAdd('formData')">立即创建</el-button>
             <el-button @click="handleClose">取 消</el-button>
           </el-form-item>
         </el-form>
 
       </el-dialog>
     </div>
+
+    <!-- 修改题目菜单表单 -->
+    <div>
+      <el-dialog
+        title="编辑菜单"
+        v-model="dialogVisible4Edit"
+        width="30%"
+        :before-close="handleClose">
+        <el-form :model="formData" :rules="rules" ref="formData" label-width="100px" class="demo-ruleForm">
+          <el-form-item label="标题" prop="title">
+            <el-input v-model="formData.title"></el-input>
+          </el-form-item>
+          <el-form-item label="图标" prop="icon">
+            <el-input v-model="formData.icon"></el-input>
+          </el-form-item>
+          <el-form-item label="题目列表名称" prop="questionListName">
+            <el-input v-model="formData.questionListName"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitEdit('formData')">确定</el-button>
+            <el-button @click="handleClose">取 消</el-button>
+          </el-form-item>
+        </el-form>
+
+      </el-dialog>
+    </div>
+
   </div>
 </template>
 
 <script>
 import {getMenuPagination} from "@/api/questionBank"
+import {addMenu} from "@/api/questionBank"
+import {updateMenu} from "@/api/questionBank"
+import {deleteMenu} from "@/api/questionBank"
 
 export default {
   name: "teacherStat",
@@ -91,7 +118,8 @@ export default {
       },
       tableData: [],
 
-      dialogVisible: false,
+      dialogVisible4Add: false,
+      dialogVisible4Edit: false,
       formData: {
         name: '',
         title: '',
@@ -138,23 +166,94 @@ export default {
     },
     handleEdit(index, row) {
       console.log(index, row)
+      this.dialogVisible4Edit = true
+      this.formData = row
     },
     handleDelete(index, row) {
       console.log(index, row)
+      this.$confirm('此操作将永久删除该菜单下的所有题目, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteMenu(row).then(res=>{
+          if (res && res.code==200){
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            });
+            this.findPage()
+          }else {
+            this.$message.error('删除数据失败');
+          }
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'success',
+          message: '已取消删除'
+        });
+      });
     },
     handleClose() {
-      this.dialogVisible = false
+      this.dialogVisible4Edit = false
+      this.dialogVisible4Add = false
       this.resetForm()
     },
+
+    //新建菜单表单提交
+    submitAdd(formName) {
+      console.log("新建")
+      console.log(this.formData)
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          addMenu(this.formData).then(res=>{
+            if (res && res.code == 200){
+              this.$message({
+                message: '添加菜单成功',
+                type: 'success'
+              });
+              this.findPage()
+            }else {
+              this.$message.error('添加菜单数据失败');
+            }
+          })
+          this.dialogVisible4Add = false
+          this.resetForm()
+        } else {
+          return false
+        }
+      });
+    },
+
+    //编辑菜单表单提交
+    submitEdit(formName) {
+      console.log("编辑")
+      console.log(this.formData)
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          updateMenu(this.formData).then(res=>{
+            if (res && res.code == 200){
+              this.$message({
+                message: '更新菜单成功',
+                type: 'success'
+              });
+              this.findPage()
+            }else {
+              this.$message.error('更新菜单数据失败');
+            }
+          })
+          this.dialogVisible4Edit = false
+          this.resetForm()
+        } else {
+          return false
+        }
+      });
+    },
+
     //重置表单内容
     resetForm() {
       this.formData = {}
     },
-    submitForm() {
-      console.log(this.formData)
-      this.resetForm()
-      this.dialogVisible = false
-    }
   },
 
 }
