@@ -1,16 +1,14 @@
 <template>
   <div>
     <div class="addButton">
-      <el-button type="primary" @click="dialogVisible4Add = true">新建菜单</el-button>
+      <el-button type="primary" @click="dialogVisible4Add = true">新建专栏</el-button>
     </div>
 
     <div>
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="id" label="Id" width="180"/>
-        <el-table-column prop="name" label="名称" width="180"/>
-        <el-table-column prop="title" label="标题" width="180"/>
-        <el-table-column prop="icon" label="图标" width="180"/>
-        <el-table-column prop="questionListName" label="题目列表名称"/>
+        <el-table-column prop="columnName" label="专栏名称" width="180"/>
+        <el-table-column prop="columnIcon" label="图标" width="180"/>
         <el-table-column label="操作">
           <template #default="scope">
             <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
@@ -34,8 +32,6 @@
         v-model:current-page="pagination.pageNum"
         v-model:page-size="pagination.pageSize"
         :page-sizes="[10, 20, 30, 50]"
-        :small="small"
-        :disabled="disabled"
         :background="background"
         layout="sizes, prev, pager, next"
         :total="pagination.total"
@@ -44,22 +40,20 @@
       />
     </div>
 
-    <!-- 新建题目菜单表单 -->
+    <!-- 新建文章专栏表单 -->
     <div>
       <el-dialog
-        title="新建菜单"
+        title="新建专栏"
         v-model="dialogVisible4Add"
         width="30%"
         :before-close="handleClose">
         <el-form :model="formData" :rules="rules" ref="formData" label-width="100px" class="demo-ruleForm">
-          <el-form-item label="标题" prop="title">
-            <el-input v-model="formData.title"></el-input>
+          <!--prop属性名称要和rlues中的一致-->
+          <el-form-item label="标题" prop="columnName">
+            <el-input v-model="formData.columnName"></el-input>
           </el-form-item>
-          <el-form-item label="图标" prop="icon">
-            <el-input v-model="formData.icon"></el-input>
-          </el-form-item>
-          <el-form-item label="题目列表名称" prop="questionListName">
-            <el-input v-model="formData.questionListName"></el-input>
+          <el-form-item label="图标" prop="columnIcon">
+            <el-input v-model="formData.columnIcon"></el-input>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="submitAdd('formData')">立即创建</el-button>
@@ -70,22 +64,19 @@
       </el-dialog>
     </div>
 
-    <!-- 修改题目菜单表单 -->
+    <!-- 修改文章专栏表单 -->
     <div>
       <el-dialog
-        title="编辑菜单"
+        title="编辑专栏"
         v-model="dialogVisible4Edit"
         width="30%"
         :before-close="handleClose">
         <el-form :model="formData" :rules="rules" ref="formData" label-width="100px" class="demo-ruleForm">
           <el-form-item label="标题" prop="title">
-            <el-input v-model="formData.title"></el-input>
+            <el-input v-model="formData.columnName"></el-input>
           </el-form-item>
           <el-form-item label="图标" prop="icon">
-            <el-input v-model="formData.icon"></el-input>
-          </el-form-item>
-          <el-form-item label="题目列表名称" prop="questionListName">
-            <el-input v-model="formData.questionListName"></el-input>
+            <el-input v-model="formData.columnIcon"></el-input>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="submitEdit('formData')">确定</el-button>
@@ -100,13 +91,15 @@
 </template>
 
 <script>
-import {getMenuPagination} from "@/api/questionBank"
-import {addMenu} from "@/api/questionBank"
-import {updateMenu} from "@/api/questionBank"
-import {deleteMenu} from "@/api/questionBank"
+import {
+  getColumnPagination,
+  addColumn,
+  updateColumn,
+  deleteColumn
+} from "@/api/column"
 
 export default {
-  name: "teacherStat",
+  name: "column",
   data() {
     return {
       background: true,
@@ -122,17 +115,11 @@ export default {
       dialogVisible4Edit: false,
       formData: {},
       rules: {
-        name: [
-          {required: true, message: '请输入名称', trigger: 'blur'},
+        columnName: [
+          {required: true, message: '请输入专栏名称', trigger: 'blur'},
         ],
-        title: [
-          {required: true, message: '请输入标题', trigger: 'blur'}
-        ],
-        icon: [
-          {required: true, message: '请输入图标', trigger: 'blur'}
-        ],
-        questionListName: [
-          {required: true, message: '请输入题目列表名称', trigger: 'blur'}
+        columnIcon: [
+          {required: true, message: '请输入专栏图标', trigger: 'blur'}
         ]
       }
     }
@@ -143,7 +130,7 @@ export default {
   },
   methods: {
     findPage() {
-      getMenuPagination(this.pagination).then(res => {
+      getColumnPagination(this.pagination).then(res => {
         if (res) {
           console.log(res)
           this.tableData = res.data
@@ -166,12 +153,12 @@ export default {
     },
     handleDelete(index, row) {
       console.log(index, row)
-      this.$confirm('此操作将永久删除该菜单下的所有题目, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该专栏下的所有文章, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteMenu(row).then(res=>{
+        deleteColumn(row).then(res=>{
           if (res && res.code==200){
             this.$message({
               type: 'success',
@@ -195,21 +182,21 @@ export default {
       this.resetForm()
     },
 
-    //新建菜单表单提交
+    //新建专栏表单提交
     submitAdd(formName) {
       console.log("新建")
       console.log(this.formData)
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          addMenu(this.formData).then(res=>{
+          addColumn(this.formData).then(res=>{
             if (res && res.code == 200){
               this.$message({
-                message: '添加菜单成功',
+                message: '添加专栏成功',
                 type: 'success'
               });
               this.findPage()
             }else {
-              this.$message.error('添加菜单数据失败');
+              this.$message.error('添加专栏数据失败');
             }
           })
           this.dialogVisible4Add = false
@@ -220,21 +207,21 @@ export default {
       });
     },
 
-    //编辑菜单表单提交
+    //编辑专栏表单提交
     submitEdit(formName) {
       console.log("编辑")
       console.log(this.formData)
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          updateMenu(this.formData).then(res=>{
+          updateColumn(this.formData).then(res=>{
             if (res && res.code == 200){
               this.$message({
-                message: '更新菜单成功',
+                message: '更新专栏成功',
                 type: 'success'
               });
               this.findPage()
             }else {
-              this.$message.error('更新菜单数据失败');
+              this.$message.error('更新专栏数据失败');
             }
           })
           this.dialogVisible4Edit = false
